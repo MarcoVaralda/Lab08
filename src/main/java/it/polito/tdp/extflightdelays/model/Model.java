@@ -1,20 +1,16 @@
 package it.polito.tdp.extflightdelays.model;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
-
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
-import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 import it.polito.tdp.extflightdelays.db.ExtFlightDelaysDAO;
 
 public class Model {
 	
-	ExtFlightDelaysDAO dao = new ExtFlightDelaysDAO();
+	ExtFlightDelaysDAO dao;
 	
 	Graph<Airport, DefaultWeightedEdge> grafo ;
 	
@@ -24,20 +20,26 @@ public class Model {
 	
 	String rotteValide;
 	
+	public Model() {
+		dao = new ExtFlightDelaysDAO();
+		mappaAirport = new HashMap<>();
+		dao.loadAllAirports(mappaAirport);	
+	}
+	
 	public Graph<Airport,DefaultWeightedEdge> creaGrafo(int distanza) {
 		
 		// Aggiungo i vertici
-		grafo = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
-		mappaAirport = new TreeMap<>();
-		dao.loadAllAirports(mappaAirport);		
+		grafo = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);	
 		Graphs.addAllVertices(this.grafo, mappaAirport.values());
 		
 		// Aggiungo gli archi
-		mappaRotte = new TreeMap<>();
+		mappaRotte = new HashMap<>();
 		dao.loadAllRotte(mappaRotte);
-		rotteValide="";
+		rotteValide="\nELENCO ROTTE:\n";
 		
-		for(Rotta r : mappaRotte.values())
+		
+		
+		for(Rotta r : mappaRotte.values()) {			
 			if(calcolaDistanzaMedia(r)>=distanza) {
 				Airport partenza = mappaAirport.get(r.getIdPartenza());
 				Airport destinazione = mappaAirport.get(r.getIdDestinazione());
@@ -45,6 +47,7 @@ public class Model {
 				rotteValide = rotteValide +partenza.getAirportName() +"-" +destinazione.getAirportName()+": "+distanzaMedia +"\n";
 				Graphs.addEdge(this.grafo, partenza, destinazione, distanzaMedia);
 			}
+		}
 		
 		return this.grafo;
 	}
